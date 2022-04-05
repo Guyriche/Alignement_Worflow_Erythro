@@ -11,11 +11,12 @@
 * Define the default parameters for input
 */
 
- def funtion(test){
+libraries = channel
+    .fromPath(file('data/Refs/*.fasta'))
+    .collect()
+    .view()
 
- }
-
- libraries = [ file('data/Refs/GATA1.fasta'), file('data/Refs/GYPB_seq.fasta')  ]
+ //libraries = [ file('data/Refs/GATA1.fasta'), file('data/Refs/GYPB_seq.fasta')  ]
  params.genome  = "data/Refs/*.fa"
  params.reads   = "data/Reads/ENCSR000COQ1_{1,2}.fastq.gz"
  params.read    = "data/Reads/FAS430170.fastq"
@@ -251,6 +252,7 @@ process MODIFEDVCF {
 * Tools :       Mummer (nucmer)
 */
 
+/*
 
 process MUMMER {
 
@@ -270,6 +272,7 @@ process MUMMER {
     """
 }
 
+ */
 
 
 /*
