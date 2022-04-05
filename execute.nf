@@ -11,9 +11,14 @@
 * Define the default parameters for input
 */
 
+ def funtion(test){
+
+ }
+
+ libraries = [ file('data/Refs/GATA1.fasta'), file('data/Refs/GYPB_seq.fasta')  ]
  params.genome  = "data/Refs/*.fa"
- params.reads   = "data/reads/ENCSR000COQ1_{1,2}.fastq.gz"
- params.read    = "data/reads/ENCSR000COQ1_1.fastq.gz"
+ params.reads   = "data/Reads/ENCSR000COQ1_{1,2}.fastq.gz"
+ params.read    = "data/Reads/FAS430170.fastq"
  params.outdir = "results"
  params.racon_nb = 4
  params.one = 1
@@ -37,7 +42,7 @@
  * Tools    :    Samtools
  */
     genome_ch = channel.fromPath(params.genome, checkIfExists:true)
-    libraries = [ file('data/Refs/genome.fa') ]
+    //libraries = [ file('data/Refs/genome.fa')]
 
     process INDEXING_REF {
 
@@ -200,11 +205,11 @@
             path files_bam from filesBam2_ch
 
         output:
-            path "${genome.baseName}.vcf" into vcfFile
+            path "${genome.baseName}.vcf" into vcfFile, vcfFile2, vcfFile3
 
         script:
         """
-        bcftools mpileup -Ov -f ${genome} ${files_bam} | bcftools call -mv -o ${genome.baseName}.vcf
+        bcftools mpileup -a 'INFO/AD' -Ov -f ${genome} ${files_bam} | bcftools call -mv -o ${genome.baseName}.vcf
         """
     }
 
@@ -246,6 +251,7 @@ process MODIFEDVCF {
 * Tools :       Mummer (nucmer)
 */
 
+
 process MUMMER {
 
     tag "Nucmer on ${fasta}"
@@ -263,6 +269,7 @@ process MUMMER {
     show-snps -Clr SNPsChr.delta > ${consensus}.snps
     """
 }
+
 
 
 /*
@@ -288,4 +295,22 @@ process CONSENSUS {
     """
     python3 ${projectDir}/scripts/generateConsensus.py ${fileBam} ${fasta}
     """
+}
+
+process GET_STATS_VCF {
+
+    tag "Generate consensus ${vcffile}"
+    publishDir "${params.outdir}/statsVcf", mode:'copy'
+
+    input:
+        path vcffile from vcfFile2
+
+    output:
+        path "stats.txt" into statsVcf
+
+    script:
+    """
+    vcf-stats ${vcffile} > stats.txt
+    """
+
 }
