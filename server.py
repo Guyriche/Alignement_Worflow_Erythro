@@ -44,6 +44,8 @@ def align():
         file.save(os.path.join(uploads_refs_align_const, file.filename))
         print(f"Fasta file {file.filename} saved")
 
+    os.system("nextflow run execute.nf")
+
     return "Done"
 
 
