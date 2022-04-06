@@ -12,14 +12,15 @@
 */
 
 libraries = channel
-    .fromPath(file('data/Refs/*.fasta'))
+    .fromPath(('data/Refs/*.fasta'))
     .collect()
     .view()
 
+
  //libraries = [ file('data/Refs/GATA1.fasta'), file('data/Refs/GYPB_seq.fasta')  ]
- params.genome  = "data/Refs/*.fa"
+ params.genome  = "data/Refs/*.fasta"
  params.reads   = "data/Reads/ENCSR000COQ1_{1,2}.fastq.gz"
- params.read    = "data/Reads/FAS430170.fastq"
+ params.read    = "data/Reads/*.fastq"
  params.outdir = "results"
  params.racon_nb = 4
  params.one = 1
@@ -43,6 +44,8 @@ libraries = channel
  * Tools    :    Samtools
  */
     genome_ch = channel.fromPath(params.genome, checkIfExists:true)
+    readsForPolissage_ch = channel.fromPath(params.read, checkIfExists:true)
+    reads_ch = channel.fromPath(params.read, checkIfExists:true)
     //libraries = [ file('data/Refs/genome.fa')]
 
     process INDEXING_REF {
@@ -71,7 +74,7 @@ libraries = channel
  * Tools :   Minimap2
  */
 
-    reads_ch = channel.fromPath(params.read, checkIfExists:true)
+
 
     process ALIGN {
 
@@ -150,7 +153,6 @@ libraries = channel
   * Tools   :   Racon
   */
 
-    readsForPolissage_ch = channel.fromPath(params.read, checkIfExists:true)
 
     process POLISSAGE {
 
@@ -302,18 +304,22 @@ process CONSENSUS {
 
 process GET_STATS_VCF {
 
-    tag "Generate consensus ${vcffile}"
+    tag "Generate Stat for Variant Call ${vcffile}"
     publishDir "${params.outdir}/statsVcf", mode:'copy'
 
     input:
         path vcffile from vcfFile2
 
     output:
-        path "stats.txt" into statsVcf
+        path "${vcffile.baseName}.txt" into statsVcf
 
     script:
     """
-    vcf-stats ${vcffile} > stats.txt
+    vcf-stats ${vcffile} > ${vcffile.baseName}.txt
     """
 
+}
+
+workflow.onComplete {
+	println ( workflow.success ? "\nDone! Open the following report in your browser --> $params.outdir/multiqc_report.html\n" : "Oops .. something went wrong" )
 }
